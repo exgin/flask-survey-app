@@ -1,12 +1,19 @@
-from flask import Flask, render_template, request, redirect
+from flask import Flask, render_template, request, redirect, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey
+
+SESSION_KEY = "responses"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'sam123'
 debug = DebugToolbarExtension(app)
 
-RESPONSES = []
+@app.route('/start', methods=['POST'])
+def start():
+    """Reset our cookies"""
+    session[SESSION_KEY] = []
+
+    return redirect('/questions/0')
 
 @app.route('/')
 def home():
@@ -30,6 +37,21 @@ def ans():
     # use request to get our choice from the input
     choice = request.form['answer']
 
-    RESPONSES.append(choice)
+    # use our session's list to keep trace of the user's choices
+    user_answers = session[SESSION_KEY]
+    user_answers.append(choice)
 
-    return redirect("/questions/<int:id>")
+    # was stuck on the same question, this allows us to continue to the
+    # next question
+    session[SESSION_KEY] = user_answers
+
+    if (len(user_answers) == len(satisfaction_survey.questions)):
+        return redirect("/done")
+    else:
+        return redirect(f"/questions/{len(user_answers)}")
+
+
+@app.route('/done')
+def done():
+    """Show completed survey screen"""
+    return render_template('done.html')
