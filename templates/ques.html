@@ -1,0 +1,12 @@
+{% extends 'home.html' %} {% block content %}
+<h1>Survey Questions!</h1>
+
+<form action="/answer" method="POST">
+  <h3>{{ques.question}}</h3>
+  {% for choice in ques.choices %}
+  <p><input type="radio" name="answer" value="{{ choice }}" /> {{ choice }}</p>
+  {% endfor %}
+<button>Next</button>
+</form>
+
+{% endblock %}
